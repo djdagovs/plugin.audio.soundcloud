@@ -1,5 +1,7 @@
 __author__ = 'bromix'
 
+import xbmc
+
 from resources.lib import nightcrawler
 from resources.lib.nightcrawler.exception import ProviderException
 from .client import Client

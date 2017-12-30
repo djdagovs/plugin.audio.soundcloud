@@ -1,7 +1,6 @@
 __author__ = 'bromix'
 
 import json
-import xbmc
 
 from .core.nightcrawler_decorators import register_path, register_context_value, register_path_value
 from .core.view_manager import ViewManager
@@ -166,7 +165,8 @@ class Provider(object):
                 'uri': selected_video_stream['uri']}
 
     def navigate(self, context):
-        self._process_addon_setup(context)
+        # TODO - fix auth
+        # self._process_addon_setup(context)
 
         method_names = dir(self)
         for method_name in method_names:
@@ -175,8 +175,6 @@ class Provider(object):
                 result = method(context)
                 if result is not None:
                     return result
-                pass
-            pass
 
         raise ProviderException('Missing method for path "%s"' % context.get_path())
 
@@ -275,7 +273,6 @@ class Provider(object):
     @register_path_value('method', unicode)
     @register_context_value('q', unicode, alias='query', default=u'')
     def _internal_search_without_query(self, context, method, query):
-        xbmc.log(msg="IN NIGHTCRAWLER SEARCH", level=3)
         search_history = context.get_search_history()
         if method == 'clear':
             search_history.clear()

@@ -1,7 +1,5 @@
 __author__ = 'bromix'
 
-import xbmc
-
 from resources.lib import nightcrawler
 from resources.lib.nightcrawler.exception import ProviderException
 from resources.lib.content import items
@@ -224,7 +222,6 @@ class Client(nightcrawler.HttpClient):
         return items.convert_to_items(response.json())
 
     def search(self, search_text, category='tracks', page=1):
-        xbmc.log("IN CLIENT SEARCH", level=3)
         if not category in ['tracks', 'users', 'playlists']:
             raise ProviderException('Unknown category "%s"' % category)
 
@@ -238,9 +235,6 @@ class Client(nightcrawler.HttpClient):
                                  headers={'Accept': 'application/json'},
                                  params=params)
         self._handle_error(response)
-        xbmc.log(str(response.__dict__), level=3)
-        for item in response.json():
-            xbmc.log(str(item), level=3)
         return items.convert_to_items(response.json())
 
     def get_stream(self, page_cursor=None):

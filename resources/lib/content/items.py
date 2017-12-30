@@ -1,7 +1,6 @@
 __author__ = 'bromix'
 
 import re
-import xbmc
 
 from resources.lib import nightcrawler
 from resources.lib.nightcrawler.exception import ProviderException
@@ -105,8 +104,7 @@ def convert_to_item(json_item):
 
 def convert_to_items_search(json_result, mobile_conversion=False, process_tracks_of_playlist=False):
     result = {'items': []}
-    xbmc.log("IN CONVERT TO ITEMS", level=3)
-    # xbmc.log(str(json_result), level=3)
+
     collection = json_result.get('collection', [])
     for track_number, item in enumerate(json_result):
         if mobile_conversion:
@@ -155,8 +153,7 @@ def convert_to_items_search(json_result, mobile_conversion=False, process_tracks
 # browse goes through here
 def convert_to_items(json_result, mobile_conversion=False, process_tracks_of_playlist=False):
     result = {'items': []}
-    xbmc.log("IN CONVERT TO ITEMS", level=3)
-    # xbmc.log(str(json_result), level=3)
+
     collection = json_result.get('collection', [])
     for track_number, item in enumerate(collection):
         if mobile_conversion:

@@ -1,7 +1,5 @@
 __author__ = 'bromix'
 
-import xbmc
-
 from resources.lib import nightcrawler
 from resources.lib.nightcrawler.exception import ProviderException
 from .client import Client
@@ -76,7 +74,6 @@ class Provider(nightcrawler.Provider):
         return self._client
 
     def process_result(self, context, result):
-        xbmc.log(msg="IN PROCESS RESULT", level=3)
         client = self.get_client(context)
 
         items = []
@@ -234,7 +231,6 @@ class Provider(nightcrawler.Provider):
     @nightcrawler.register_context_value('category', unicode, default='tracks')
     @nightcrawler.register_context_value('page', int, default=1)
     def on_search(self, context, search_text, category, page):
-        xbmc.log(msg="IN SEARCH", level=3)
         result = []
 
         # set the correct content type
@@ -267,13 +263,10 @@ class Provider(nightcrawler.Provider):
                            'images': {'thumbnail': context.create_resource_path('media/playlists.png'),
                                       'fanart': self.get_fanart(context)}})
 
-        xbmc.log("STILL IN SEARCH FUNCTION", level=3)
-        xbmc.log(search_text, level=3)
 
         search_result = context.cache_function(context.CACHE_ONE_MINUTE * 10, self.get_client(context).search,
                                                search_text, category, page=page)
-        # search_result = self.get_client(context).search(search_text, category, page=page)
-        xbmc.log("ABOUT TO PROCESS RESULT", level=3)
+
         result.extend(self.process_result(context, search_result))
         return result
 

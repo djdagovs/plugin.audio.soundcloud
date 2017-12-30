@@ -1,5 +1,7 @@
 __author__ = 'bromix'
 
+import xbmc
+
 from resources.lib import nightcrawler
 from resources.lib.nightcrawler.exception import ProviderException
 from resources.lib.content import items
@@ -49,7 +51,6 @@ class Client(nightcrawler.HttpClient):
         params = {'limit': str(self._items_per_page)}
         if page > 1:
             params['offset'] = str((page - 1) * self._items_per_page)
-            pass
         return params
 
     def _handle_error(self, response):
@@ -222,21 +223,24 @@ class Client(nightcrawler.HttpClient):
         self._handle_error(response)
         return items.convert_to_items(response.json())
 
-    def search(self, search_text, category='sounds', page=1):
-
-        if not category in ['sounds', 'people', 'sets']:
+    def search(self, search_text, category='tracks', page=1):
+        xbmc.log("IN CLIENT SEARCH", level=3)
+        if not category in ['tracks', 'users', 'playlists']:
             raise ProviderException('Unknown category "%s"' % category)
 
         params = {'limit': str(self._items_per_page),
-                  'q': search_text}
-        if page > 1:
-            params['offset'] = str((page - 1) * self._items_per_page)
-            pass
+                  'q': search_text,
+                  'linked_partitioning':page}
+        # if page > 1:
+        #     params['offset'] = str((page - 1) * self._items_per_page)
 
-        response = self._request(self._create_url('search/%s' % category),
+        response = self._request(self._create_url('%s/' % category),
                                  headers={'Accept': 'application/json'},
                                  params=params)
         self._handle_error(response)
+        xbmc.log(str(response.__dict__), level=3)
+        for item in response.json():
+            xbmc.log(str(item), level=3)
         return items.convert_to_items(response.json())
 
     def get_stream(self, page_cursor=None):

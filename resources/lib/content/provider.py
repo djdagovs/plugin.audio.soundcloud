@@ -33,7 +33,6 @@ class Provider(nightcrawler.Provider):
     def __init__(self):
         nightcrawler.Provider.__init__(self)
         self._client = None
-        pass
 
     def on_setup(self, context, mode):
         if mode == 'content-type':
@@ -45,7 +44,6 @@ class Provider(nightcrawler.Provider):
                 return
 
             context.get_ui().open_settings();
-            pass
 
         return None
 
@@ -78,6 +76,7 @@ class Provider(nightcrawler.Provider):
         return self._client
 
     def process_result(self, context, result):
+        xbmc.log(msg="IN PROCESS RESULT", level=3)
         client = self.get_client(context)
 
         items = []
@@ -101,13 +100,10 @@ class Provider(nightcrawler.Provider):
                         context_menu.append((context.localize(self.SOUNDCLOUD_LOCAL_UNLIKE),
                                              'RunPlugin(%s)' % context.create_uri('like/track/%s' % unicode(item['id']),
                                                                                   {'like': '0'})))
-                        pass
                     else:
                         context_menu.append((context.localize(self.SOUNDCLOUD_LOCAL_LIKE),
                                              'RunPlugin(%s)' % context.create_uri('like/track/%s' % unicode(item['id']),
                                                                                   {'like': '1'})))
-                        pass
-                    pass
 
                 # go to user
                 username = nightcrawler.utils.strings.to_unicode(item['user']['username'])
@@ -116,8 +112,6 @@ class Provider(nightcrawler.Provider):
                     context_menu.append((
                         context.localize(self.SOUNDCLOUD_LOCAL_GO_TO_USER) % ('[B]%s[/B]' % username),
                         'Container.Update(%s)' % context.create_uri('/user/tracks/%s/' % user_id)))
-                    pass
-                pass
             elif item_type == 'playlist':
                 item['type'] = 'folder'
                 item['uri'] = context.create_uri('/playlist/%s/' % item['id'])
@@ -131,9 +125,6 @@ class Provider(nightcrawler.Provider):
                         context_menu = [(context.localize(self.SOUNDCLOUD_LOCAL_LIKE),
                                          'RunPlugin(%s)' % context.create_uri('like/playlist/%s' % unicode(item['id']),
                                                                               {'like': '1'}))]
-                        pass
-                    pass
-                pass
             elif item_type == 'artist':
                 item['type'] = 'folder'
                 item['uri'] = context.create_uri('/user/tracks/%s/' % item['id'])
@@ -143,24 +134,18 @@ class Provider(nightcrawler.Provider):
                         context_menu = [(context.localize(self.SOUNDCLOUD_LOCAL_UNFOLLOW),
                                          'RunPlugin(%s)' % context.create_uri('follow/%s' % unicode(item['id']),
                                                                               {'follow': '0'}))]
-                        pass
                     else:
                         context_menu = [(context.localize(self.SOUNDCLOUD_LOCAL_FOLLOW),
                                          'RunPlugin(%s)' % context.create_uri('follow/%s' % unicode(item['id']),
                                                                               {'follow': '1'}))]
-                        pass
-                    pass
-                pass
             else:
                 raise ProviderException('Unknown item type "%s"' % item_type)
 
             if context_menu:
                 item['context-menu'] = {'items': context_menu}
-                pass
 
             item['images']['fanart'] = self.get_fanart(context)
             items.append(item)
-            pass
 
         # create next page item
         if result.get('continue', False):
@@ -168,10 +153,8 @@ class Provider(nightcrawler.Provider):
             new_params.update(context.get_params())
             if 'cursor' in result:
                 new_params['cursor'] = result['cursor']
-                pass
             new_context = context.clone(new_params=new_params)
             items.append(nightcrawler.items.create_next_page_item(new_context, fanart=self.get_fanart(context)))
-            pass
         return items
 
     @nightcrawler.register_path('/like/(?P<category>track|playlist)/(?P<content_id>.+)/')
@@ -248,27 +231,27 @@ class Provider(nightcrawler.Provider):
 
         return False
 
-    @nightcrawler.register_context_value('category', unicode, default='sounds')
+    @nightcrawler.register_context_value('category', unicode, default='tracks')
     @nightcrawler.register_context_value('page', int, default=1)
     def on_search(self, context, search_text, category, page):
+        xbmc.log(msg="IN SEARCH", level=3)
         result = []
 
         # set the correct content type
-        if category == 'sounds':
+        # soundcloud endpoints are users, tracks and playlists
+        if category == 'tracks':
             context.set_content_type(context.CONTENT_TYPE_SONGS)
-            pass
-        elif category == 'sets':
+        elif category == 'playlists':
             context.set_content_type(context.CONTENT_TYPE_ALBUMS)
-            pass
-        elif category == 'people':
+        elif category == 'users':
             context.set_content_type(context.CONTENT_TYPE_ARTISTS)
-            pass
 
         # first page of search
-        if page == 1 and category == 'sounds':
+        # The search defaults to tracks, so on page 1 we add the option for the user to search playlists and artists too
+        if page == 1 and category == 'tracks':
             people_params = {}
             people_params.update(context.get_params())
-            people_params['category'] = 'people'
+            people_params['category'] = 'users'
             result.append({'type': 'folder',
                            'title': '[B]%s[/B]' % context.localize(self.SOUNDCLOUD_LOCAL_PEOPLE),
                            'uri': context.create_uri(context.get_path(), people_params),
@@ -277,17 +260,20 @@ class Provider(nightcrawler.Provider):
 
             playlist_params = {}
             playlist_params.update(context.get_params())
-            playlist_params['category'] = 'sets'
+            playlist_params['category'] = 'playlists'
             result.append({'type': 'folder',
                            'title': '[B]%s[/B]' % context.localize(self.SOUNDCLOUD_LOCAL_PLAYLISTS),
                            'uri': context.create_uri(context.get_path(), playlist_params),
                            'images': {'thumbnail': context.create_resource_path('media/playlists.png'),
                                       'fanart': self.get_fanart(context)}})
 
-            pass
+        xbmc.log("STILL IN SEARCH FUNCTION", level=3)
+        xbmc.log(search_text, level=3)
 
         search_result = context.cache_function(context.CACHE_ONE_MINUTE * 10, self.get_client(context).search,
                                                search_text, category, page=page)
+        # search_result = self.get_client(context).search(search_text, category, page=page)
+        xbmc.log("ABOUT TO PROCESS RESULT", level=3)
         result.extend(self.process_result(context, search_result))
         return result
 
@@ -502,7 +488,6 @@ class Provider(nightcrawler.Provider):
                            'uri': context.create_uri('stream'),
                            'images': {'thumbnail': context.create_resource_path('media/stream.png'),
                                       'fanart': self.get_fanart(context)}})
-            pass
 
         # search
         result.append(nightcrawler.items.create_search_item(context, fanart=self.get_fanart(context)))
@@ -514,5 +499,3 @@ class Provider(nightcrawler.Provider):
                        'images': {'thumbnail': context.create_resource_path('media/explore.png'),
                                   'fanart': self.get_fanart(context)}})
         return result
-
-    pass

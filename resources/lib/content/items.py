@@ -1,6 +1,7 @@
 __author__ = 'bromix'
 
 import re
+import xbmc
 
 from resources.lib import nightcrawler
 from resources.lib.nightcrawler.exception import ProviderException
@@ -25,7 +26,6 @@ def _get_thumbnail(json_data):
 
         # fall back is the user avatar (at least)
         image_url = json_data.get('artwork_url_template', '')
-        pass
 
     return _get_hires_image(image_url)
 
@@ -103,10 +103,60 @@ def convert_to_item(json_item):
 
     raise ProviderException('Unknown kind of item "%s"' % kind)
 
+def convert_to_items_search(json_result, mobile_conversion=False, process_tracks_of_playlist=False):
+    result = {'items': []}
+    xbmc.log("IN CONVERT TO ITEMS", level=3)
+    # xbmc.log(str(json_result), level=3)
+    collection = json_result.get('collection', [])
+    for track_number, item in enumerate(json_result):
+        if mobile_conversion:
+            # simple conversion to use the common convert_to_item() method
+            user = item.get('_embedded', {}).get('user', {})
+            user_id = user['urn'].split(':')[2]
+            item['user'] = {'username': user['username'],
+                            'id': user_id}
 
+            # create track id of urn
+            track_id = item['urn'].split(':')[2]
+            item['id'] = track_id
+
+            # is always a track
+            item['kind'] = 'track'
+
+        # test if we have an 'origin' tag. If so we are in the activities
+        item = item.get('origin', item)
+        if item is None:
+            """
+            One issue is known (https://github.com/bromix/plugin.audio.soundcloud/issues/27) in which SoundCloud returns
+            an incomplete item without origin or anything else. We skip these items.
+            """
+            continue
+
+        item = convert_to_item(item)
+        if item:
+            if process_tracks_of_playlist:
+                item['tracknumber'] = track_number+1
+            result['items'].append(item)
+
+    # next page validation
+    next_href = json_result.get('_links', {}).get('next', {}).get('href', '')
+    if next_href and len(result['items']) > 0:
+        result['continue'] = True
+
+    next_href = json_result.get('next_href', '')
+    if next_href and len(result['items']) > 0:
+        result['continue'] = True
+        re_match = re.match(r'.*cursor=(?P<cursor>[a-z0-9-]+).*', next_href)
+        if re_match:
+            result['cursor'] = re_match.group('cursor')
+
+    return result
+
+# browse goes through here
 def convert_to_items(json_result, mobile_conversion=False, process_tracks_of_playlist=False):
     result = {'items': []}
-
+    xbmc.log("IN CONVERT TO ITEMS", level=3)
+    # xbmc.log(str(json_result), level=3)
     collection = json_result.get('collection', [])
     for track_number, item in enumerate(collection):
         if mobile_conversion:
@@ -122,7 +172,6 @@ def convert_to_items(json_result, mobile_conversion=False, process_tracks_of_pla
 
             # is always a track
             item['kind'] = 'track'
-            pass
 
         # test if we have an 'origin' tag. If so we are in the activities
         item = item.get('origin', item)
@@ -132,22 +181,17 @@ def convert_to_items(json_result, mobile_conversion=False, process_tracks_of_pla
             an incomplete item without origin or anything else. We skip these items.
             """
             continue
-            pass
 
         item = convert_to_item(item)
         if item:
             if process_tracks_of_playlist:
                 item['tracknumber'] = track_number+1
-                pass
             result['items'].append(item)
-            pass
-        pass
 
     # next page validation
     next_href = json_result.get('_links', {}).get('next', {}).get('href', '')
     if next_href and len(result['items']) > 0:
         result['continue'] = True
-        pass
 
     next_href = json_result.get('next_href', '')
     if next_href and len(result['items']) > 0:
@@ -155,7 +199,5 @@ def convert_to_items(json_result, mobile_conversion=False, process_tracks_of_pla
         re_match = re.match(r'.*cursor=(?P<cursor>[a-z0-9-]+).*', next_href)
         if re_match:
             result['cursor'] = re_match.group('cursor')
-            pass
-        pass
 
     return result

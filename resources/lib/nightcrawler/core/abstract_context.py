@@ -123,7 +123,6 @@ class AbstractContext(object):
     def _get_cache_path(self):
         if not self._cache_path:
             self._cache_path = os.path.join(self.get_data_path(), 'kodion')
-            pass
         return self._cache_path
 
     def get_function_cache(self):
@@ -138,8 +137,6 @@ class AbstractContext(object):
                 settings.disable_clear_cache()
                 self._function_cache.remove_file()
                 self.log_info('Clearing cache done')
-                pass
-            pass
         return self._function_cache
 
     def cache_function(self, seconds, func, *args, **keywords):

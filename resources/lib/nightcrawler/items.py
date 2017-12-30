@@ -14,7 +14,6 @@ def create_item_hash(item):
 def create_next_page_item(context, thumbnail=None, fanart=None):
     if not fanart:
         fanart = context.get_fanart()
-        pass
     page = int(context.get_param('page', 1)) + 1
 
     new_params = {}
@@ -36,15 +35,12 @@ def create_next_page_item(context, thumbnail=None, fanart=None):
 def create_search_item(context, thumbnail=None, fanart=None):
     if not thumbnail:
         thumbnail = context.create_resource_path('media/search.png')
-        pass
     if not fanart:
         fanart = context.get_fanart()
-        pass
 
     uri = context.create_uri('search/list')
     if context.get_search_history().get_max_item_count() == 0:
         uri = context.create_uri('search/query')
-        pass
 
     return {'type': 'folder',
             'title': context.localize(30102),
@@ -56,10 +52,8 @@ def create_search_item(context, thumbnail=None, fanart=None):
 def create_watch_later_item(context, thumbnail=None, fanart=None):
     if not thumbnail:
         thumbnail = context.create_resource_path('media/watch_later.png')
-        pass
     if not fanart:
         fanart = context.get_fanart()
-        pass
     return {'type': 'folder',
             'title': context.localize(30107),
             'uri': context.create_uri('watch_later/list'),

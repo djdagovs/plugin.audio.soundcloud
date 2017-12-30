@@ -1,6 +1,7 @@
 __author__ = 'bromix'
 
 import json
+import xbmc
 
 from .core.nightcrawler_decorators import register_path, register_context_value, register_path_value
 from .core.view_manager import ViewManager
@@ -266,7 +267,6 @@ class Provider(object):
             if result:
                 search_history.rename(query, new_query)
                 context.get_ui().refresh_container()
-                pass
             return True
 
         return False
@@ -275,6 +275,7 @@ class Provider(object):
     @register_path_value('method', unicode)
     @register_context_value('q', unicode, alias='query', default=u'')
     def _internal_search_without_query(self, context, method, query):
+        xbmc.log(msg="IN NIGHTCRAWLER SEARCH", level=3)
         search_history = context.get_search_history()
         if method == 'clear':
             search_history.clear()
@@ -304,7 +305,6 @@ class Provider(object):
                                    'fanart': self.get_fanart(context)},
                         'context-menu': {'items': context_menu}}
                 result.append(item)
-                pass
 
             return result
 
@@ -312,12 +312,11 @@ class Provider(object):
             result = True
             if not query:
                 result, query = context.get_ui().on_keyboard_input(context.localize(self.LOCAL_SEARCH_TITLE))
-                pass
 
             if result and query:
                 search_history.update(query)
+
                 return self.on_search(context, query)
-            pass
 
         return False
 
@@ -336,5 +335,3 @@ class Provider(object):
         :param context: the current context
         """
         pass
-
-    pass
